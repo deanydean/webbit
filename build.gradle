@@ -1,0 +1,47 @@
+//
+// Main build file for webbit
+apply plugin: "java"
+apply plugin: "maven"
+
+group = "org.oddcyb"
+version = "1.0.0-SNAPSHOT"
+
+task run (type: JavaExec, dependsOn: classes){
+    if(project.hasProperty('appargs')){
+        args(appargs.split(','))
+    }
+    description = "Run grizzd server"
+    main = "org.oddcyb.webbit.Start"
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+jar {
+    manifest {
+        attributes "Main-Class": "org.oddcyb.webbit.Start"
+    }
+
+    from {
+        configurations.compile.collect { 
+            it.isDirectory() ? it : zipTree(it).matching {
+                exclude { it.path.contains("META-INF") }
+            }
+        }
+        
+        configurations.runtime.collect {
+            it.isDirectory() ? it : zipTree(it).matching {
+                exclude { it.path.contains("META-INF") }
+            }
+        }
+    }
+
+    archiveName = "webbit.jar"
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    compile "io.helidon.bundles:helidon-bundles-webserver:1.0.0" 
+}
