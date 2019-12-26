@@ -1,9 +1,15 @@
 package org.oddcyb.webbit;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.net.InetAddress;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+
+import com.google.gson.Gson;
 
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.ServerConfiguration;
@@ -18,28 +24,40 @@ public class Start
     private static final Logger LOG = Logger.getLogger(Start.class.getName());
 
     /**
+     * The path to the default webbit json config file.
+     */
+    public static final String DEFAULT_CONFIG_FILE = "/webbit/webbit.json";
+
+    /**
      * Main method to start the webbit webserver.
      *
-     * @param args the params for the webserver. Expected to be an array of
-*                  [ listenHost, listenPort, contentPath ]
-     * @throws Exception if something goes wrong or if the params are invalid
+     * @throws Exception if something goes wrong
      */
     public static void main(String[] args) throws Exception
     {
-        var host = args[0];
-        var port = Integer.parseInt(args[1]);
-        var content = Paths.get(args[2]);
+        String configFile = (args.length == 0) ? 
+                                DEFAULT_CONFIG_FILE :
+                                args[0];
+        BufferedReader configFileReader = 
+            new BufferedReader(new FileReader(configFile));
+        Map<String, Object> config = 
+            new Gson().fromJson(configFileReader, Map.class);
+
+        var host = config.getOrDefault("host", "0.0.0.0").toString();
+        var port = config.getOrDefault("port", "80").toString();
+        var root = config.getOrDefault("www-root", "/webbit/www").toString();
 
         var serverConfig = ServerConfiguration.builder()
                 .bindAddress(InetAddress.getByName(host))
-                .port(port)
+                .port(Integer.parseInt(port))
                 .build();
 
+        var staticContent = StaticContentSupport.builder(Paths.get(root))
+                                                .welcomeFileName("index.html")
+                                                .build();
+
         var routing = Routing.builder()
-                .register("/",
-                    StaticContentSupport.builder(content)
-                        .welcomeFileName("index.html")
-                        .build())
+                .register("/", staticContent)
                 .build();
 
         var webserver = WebServer.create(serverConfig, routing)
