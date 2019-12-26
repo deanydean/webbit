@@ -1,14 +1,14 @@
 package org.oddcyb.webbit;
 
-import io.helidon.webserver.Routing;
-import io.helidon.webserver.ServerConfiguration;
-import io.helidon.webserver.StaticContentSupport;
-import io.helidon.webserver.WebServer;
-
 import java.net.InetAddress;
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+
+import io.helidon.webserver.Routing;
+import io.helidon.webserver.ServerConfiguration;
+import io.helidon.webserver.StaticContentSupport;
+import io.helidon.webserver.WebServer;
 
 /**
  * Start the webbit webserver.
