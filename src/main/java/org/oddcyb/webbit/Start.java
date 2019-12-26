@@ -3,8 +3,11 @@ package org.oddcyb.webbit;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.net.InetAddress;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -38,10 +41,18 @@ public class Start
         String configFile = (args.length == 0) ? 
                                 DEFAULT_CONFIG_FILE :
                                 args[0];
-        BufferedReader configFileReader = 
-            new BufferedReader(new FileReader(configFile));
-        Map<String, Object> config = 
-            new Gson().fromJson(configFileReader, Map.class);
+
+        Map<String,Object> config = null;
+        if ( Files.isReadable(Paths.get(configFile)) )
+        {
+            BufferedReader configFileReader = 
+                new BufferedReader(new FileReader(configFile));
+            config = new Gson().fromJson(configFileReader, Map.class);
+        }
+        else
+        {
+            config = new HashMap<>();
+        }
 
         var host = config.getOrDefault("host", "0.0.0.0").toString();
         var port = config.getOrDefault("port", "80").toString();
