@@ -44,5 +44,5 @@ repositories {
 
 dependencies {
     compile "io.helidon.bundles:helidon-bundles-webserver:1.4.1"
-    compile "com.google.code.gson:gson:2.8.6"
+    compile "io.helidon.config:helidon-config-yaml:1.4.1"
 }

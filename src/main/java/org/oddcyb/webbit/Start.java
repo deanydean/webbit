@@ -1,19 +1,12 @@
 package org.oddcyb.webbit;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.net.InetAddress;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import com.google.gson.Gson;
-
+import io.helidon.config.Config;
+import io.helidon.config.ConfigSources;
+import io.helidon.config.yaml.YamlConfigParserBuilder;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.ServerConfiguration;
 import io.helidon.webserver.StaticContentSupport;
@@ -29,7 +22,7 @@ public class Start
     /**
      * The path to the default webbit json config file.
      */
-    public static final String DEFAULT_CONFIG_FILE = "/webbit/webbit.json";
+    public static final String DEFAULT_CONFIG_FILE = "/webbit/webbit.yaml";
 
     /**
      * Main method to start the webbit webserver.
@@ -42,39 +35,27 @@ public class Start
                                 DEFAULT_CONFIG_FILE :
                                 args[0];
 
-        Map<String,Object> config = null;
-        if ( Files.isReadable(Paths.get(configFile)) )
-        {
-            BufferedReader configFileReader = 
-                new BufferedReader(new FileReader(configFile));
-            config = new Gson().fromJson(configFileReader, Map.class);
-        }
-        else
-        {
-            config = new HashMap<>();
-        }
+        var configFileSrc = ConfigSources.file(configFile)
+                                         .parser(YamlConfigParserBuilder.buildDefault())
+                                         .build();
+        var config = Config.create(configFileSrc);
 
-        var host = config.getOrDefault("host", "0.0.0.0").toString();
-        var port = config.getOrDefault("port", "80").toString();
-        var root = config.getOrDefault("www-root", "/webbit/www").toString();
+        var serverConfig = ServerConfiguration.builder(config.get("server"))
+                                              .build();
 
-        var serverConfig = ServerConfiguration.builder()
-                .bindAddress(InetAddress.getByName(host))
-                .port(Integer.parseInt(port))
-                .build();
-
+        var root = config.get("www.root").asString().orElse("/webbit/www");
         var staticContent = StaticContentSupport.builder(Paths.get(root))
                                                 .welcomeFileName("index.html")
                                                 .build();
 
         var routing = Routing.builder()
-                .register("/", staticContent)
-                .build();
+                             .register("/", staticContent)
+                             .build();
 
         var webserver = WebServer.create(serverConfig, routing)
-                .start()
-                .toCompletableFuture()
-                .get(10, TimeUnit.SECONDS);
+                                 .start()
+                                 .toCompletableFuture()
+                                 .get(10, TimeUnit.SECONDS);
 
         LOG.info("Webserver running on port "+webserver.port());
     }

@@ -12,6 +12,7 @@ RUN gradle --no-daemon build
 FROM openjdk:11-jre-slim
 WORKDIR /webbit
 ADD etc/default-index.html /webbit/www/index.html
+ADD etc/default-application.yaml /webbit/webbit.yaml
 COPY --from=build /home/gradle/build/libs/webbit.jar webbit.jar
 
 EXPOSE 80
