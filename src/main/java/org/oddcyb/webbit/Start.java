@@ -1,3 +1,18 @@
+/*
+ * Copyright 2019, Matt "Deany" Dean.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.oddcyb.webbit;
 
 import java.nio.file.Paths;
@@ -35,13 +50,11 @@ public class Start
                                 DEFAULT_CONFIG_FILE :
                                 args[0];
 
-        var configFileSrc = ConfigSources.file(configFile)
-                                         .parser(YamlConfigParserBuilder.buildDefault())
-                                         .build();
-        var config = Config.create(configFileSrc);
-
-        var serverConfig = ServerConfiguration.builder(config.get("server"))
-                                              .build();
+        var config = Config.create(
+            ConfigSources.file(configFile)
+                         .parser(YamlConfigParserBuilder.buildDefault())
+                         .build()
+        );
 
         var root = config.get("www.root").asString().orElse("/webbit/www");
         var staticContent = StaticContentSupport.builder(Paths.get(root))
@@ -52,6 +65,8 @@ public class Start
                              .register("/", staticContent)
                              .build();
 
+        var serverConfig = ServerConfiguration.builder(config.get("server"))
+                                              .build();
         var webserver = WebServer.create(serverConfig, routing)
                                  .start()
                                  .toCompletableFuture()
@@ -59,5 +74,4 @@ public class Start
 
         LOG.info("Webserver running on port "+webserver.port());
     }
-
 }
