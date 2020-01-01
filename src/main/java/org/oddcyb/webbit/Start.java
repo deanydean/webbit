@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, Matt "Deany" Dean.
+ * Copyright 2019, 2020, Matt "Deany" Dean.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,16 @@
  */
 package org.oddcyb.webbit;
 
-import java.nio.file.Paths;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+
+import org.oddcyb.webbit.plugins.RediectPlugin;
+import org.oddcyb.webbit.plugins.StaticContentPlugin;
 
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
 import io.helidon.config.yaml.YamlConfigParserBuilder;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.ServerConfiguration;
-import io.helidon.webserver.StaticContentSupport;
 import io.helidon.webserver.WebServer;
 
 /**
@@ -38,6 +38,9 @@ public class Start
      * The path to the default webbit json config file.
      */
     public static final String DEFAULT_CONFIG_FILE = "/webbit/webbit.yaml";
+
+    public static final String CONFIG_WWW_ROOT = "www.root";
+    public static final String CONFIG_WWW_REDIRECT = "www.redirect";
 
     /**
      * Main method to start the webbit webserver.
@@ -56,22 +59,19 @@ public class Start
                          .build()
         );
 
-        var root = config.get("www.root").asString().orElse("/webbit/www");
-        var staticContent = StaticContentSupport.builder(Paths.get(root))
-                                                .welcomeFileName("index.html")
-                                                .build();
-
-        var routing = Routing.builder()
-                             .register("/", staticContent)
-                             .build();
-
+        var routing = Routing.builder();
+        routing = StaticContentPlugin.enable(routing, config.get(CONFIG_WWW_ROOT));
+        routing = RediectPlugin.enable(routing, config.get(CONFIG_WWW_REDIRECT));
+        
         var serverConfig = ServerConfiguration.builder(config.get("server"))
                                               .build();
-        var webserver = WebServer.create(serverConfig, routing)
-                                 .start()
-                                 .toCompletableFuture()
-                                 .get(10, TimeUnit.SECONDS);
 
-        LOG.info("Webserver running on port "+webserver.port());
+        WebServer.builder(routing)
+                 .config(serverConfig)
+                 .build()
+                 .start()
+                 .toCompletableFuture()
+                 .thenRun( () ->
+                       LOG.info("Webbit running....") );
     }
 }

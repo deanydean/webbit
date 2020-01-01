@@ -1,0 +1,10 @@
+server:
+  port: 8443
+  ssl:
+    private-key:
+      key-alias: webbit_key
+      keystore-path: ./certificate.p12
+      keystore-passphrase: webbitwebbit
+
+www:
+  root: ./var/www
