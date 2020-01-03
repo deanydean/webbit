@@ -17,6 +17,7 @@ package org.oddcyb.webbit.plugins;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.logging.Logger;
 
 import io.helidon.config.Config;
 import io.helidon.webserver.Routing;
@@ -28,25 +29,51 @@ import io.helidon.webserver.StaticContentSupport;
 public class StaticContentPlugin
 {
 
+    private static final Logger LOG = 
+        Logger.getLogger(StaticContentPlugin.class.getName());
+
     /**
      * Enable the static content plugin.
      * 
      * @param routing the routing builder to use to enable this plugin
-     * @param root the root path to the static content
+     * @param config the config for the plugin to use
      * @return a routing builder with the static content enabled
      */
-    public static Routing.Builder enable(Routing.Builder routing, Config root)
+    public static Routing.Builder enable(Routing.Builder routing, Config config)
     {
-        if ( root.hasValue() )
+        var staticConfig = config.get("www.static");
+
+        if ( staticConfig.exists() )
         {
-            Path rootPath = Paths.get(root.asString().get());
-            var staticContent = StaticContentSupport.builder(rootPath)
-                                                    .welcomeFileName("index.html")
-                                                    .build();
-            return routing.register("/", staticContent);
+            return staticConfig.asNodeList()
+                               .get()
+                               .stream()
+                               .collect( () -> routing,
+                                         (r, p) -> enablePath(r, p),
+                                         (r1,r2) -> {} );
         }
 
         return routing;
+    }
+
+    /**
+     * Enable static content for a path.
+     * 
+     * @param routing the router builder to enable the static content on.
+     * @param pathConfig the config for the static content
+     * @return a router builder with the static content enabled
+     */
+    private static Routing.Builder enablePath(Routing.Builder routing, 
+                                              Config pathConfig)
+    {
+        String path = pathConfig.get("path").asString().get();
+        String url = pathConfig.get("url").asString().get();
+
+        LOG.info( () -> "Adding static path "+url+" -> "+path );
+        var staticContent = StaticContentSupport.builder(Paths.get(path))
+                                                .welcomeFileName("index.html")
+                                                .build();
+        return routing.register(url, staticContent);
     }
     
 }

@@ -17,7 +17,7 @@ package org.oddcyb.webbit;
 
 import java.util.logging.Logger;
 
-import org.oddcyb.webbit.plugins.RediectPlugin;
+import org.oddcyb.webbit.plugins.RedirectPlugin;
 import org.oddcyb.webbit.plugins.StaticContentPlugin;
 
 import io.helidon.config.Config;
@@ -39,9 +39,6 @@ public class Start
      */
     public static final String DEFAULT_CONFIG_FILE = "/webbit/webbit.yaml";
 
-    public static final String CONFIG_WWW_ROOT = "www.root";
-    public static final String CONFIG_WWW_REDIRECT = "www.redirect";
-
     /**
      * Main method to start the webbit webserver.
      *
@@ -60,8 +57,8 @@ public class Start
         );
 
         var routing = Routing.builder();
-        routing = StaticContentPlugin.enable(routing, config.get(CONFIG_WWW_ROOT));
-        routing = RediectPlugin.enable(routing, config.get(CONFIG_WWW_REDIRECT));
+        routing = StaticContentPlugin.enable(routing, config);
+        routing = RedirectPlugin.enable(routing, config);
         
         var serverConfig = ServerConfiguration.builder(config.get("server"))
                                               .build();

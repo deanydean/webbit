@@ -7,4 +7,6 @@ server:
       keystore-passphrase: webbitwebbit
 
 www:
-  root: ./var/www
+  static:
+    - url: /
+      path: ./var/www

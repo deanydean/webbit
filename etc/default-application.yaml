@@ -2,4 +2,6 @@ server:
   port: 8080
 
 www:
-  root: ./var/www
+  static:
+    - url: /
+      path: ./var/www

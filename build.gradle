@@ -45,4 +45,5 @@ repositories {
 dependencies {
     compile "io.helidon.bundles:helidon-bundles-webserver:1.4.1"
     compile "io.helidon.config:helidon-config-yaml:1.4.1"
+    compile "org.apache.commons:commons-text:1.8"
 }

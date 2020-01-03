@@ -2,4 +2,6 @@ server:
   port: 8080
 
 www:
-  redirect: https://${HOST}:8443${PATH}
+  redirects:
+    - all: true 
+      to: https://${host}:8443${path}
