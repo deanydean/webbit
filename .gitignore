@@ -2,3 +2,4 @@
 /bin/
 /build/
 *.p12
+/var
