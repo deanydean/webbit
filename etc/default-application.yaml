@@ -4,4 +4,4 @@ server:
 www:
   static:
     - url: /
-      path: ./var/www
+      path: ./www
